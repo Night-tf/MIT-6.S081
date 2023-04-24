@@ -281,6 +281,9 @@ fork(void)
     return -1;
   }
 
+  // Copy the trace mask from the parent to the child process.   
+  np->trace_mask = p->trace_mask;
+
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
@@ -653,4 +656,21 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+// Collect the number of processes
+// whose state is not unused
+uint64 collect_not_unused_proc(void){
+  struct proc *p;
+  int cnt = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if(p->state != UNUSED){
+      ++cnt;
+    }
+    release(&p->lock);
+  }
+  
+  return cnt;
 }

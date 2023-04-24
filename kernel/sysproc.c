@@ -6,15 +6,20 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
+
+uint64 collect_free_memory();
+uint64 collect_not_unused_proc();
+
 
 uint64
 sys_exit(void)
 {
   int n;
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
   exit(n);
-  return 0;  // not reached
+  return 0; // not reached
 }
 
 uint64
@@ -33,7 +38,7 @@ uint64
 sys_wait(void)
 {
   uint64 p;
-  if(argaddr(0, &p) < 0)
+  if (argaddr(0, &p) < 0)
     return -1;
   return wait(p);
 }
@@ -44,10 +49,10 @@ sys_sbrk(void)
   int addr;
   int n;
 
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
-  if(growproc(n) < 0)
+  if (growproc(n) < 0)
     return -1;
   return addr;
 }
@@ -58,12 +63,14 @@ sys_sleep(void)
   int n;
   uint ticks0;
 
-  if(argint(0, &n) < 0)
+  if (argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(myproc()->killed){
+  while (ticks - ticks0 < n)
+  {
+    if (myproc()->killed)
+    {
       release(&tickslock);
       return -1;
     }
@@ -78,7 +85,7 @@ sys_kill(void)
 {
   int pid;
 
-  if(argint(0, &pid) < 0)
+  if (argint(0, &pid) < 0)
     return -1;
   return kill(pid);
 }
@@ -94,4 +101,40 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+// Add a sys_trace() function in kernel/sysproc.c
+uint64 sys_trace(void)
+{
+  int mask;
+  if (argint(0, &mask) < 0)
+  {
+    return -1;
+  }
+  myproc()->trace_mask = mask;
+  // printf("sys_trace: hello\n");
+  return 0;
+}
+
+// Add a sys_sysinfo() function in here
+uint64 sys_sysinfo(void)
+{
+  struct sysinfo info;
+  uint64 addr; // user pointer to struct sysinfo
+  struct proc *p = myproc();
+
+  info.freemem = collect_free_memory();
+  info.nproc = collect_not_unused_proc();
+
+  // 使用argaddr()获得用户从sysinfo()函数传入的变量，也就是一个
+  // struct sysinfo 的指针，把该指针中的内容（也就是地址）放在 addr 中，
+  // 之后我们可以通过这个地址完成将内核信息传递给用户
+  if (argaddr(0, &addr) < 0)
+  {
+    return -1;
+  }
+  if(copyout(p->pagetable, addr, (char *)&info, sizeof(info)) < 0){
+    return -1;
+  }
+  return 0;
 }
