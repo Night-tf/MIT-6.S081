@@ -1,3 +1,6 @@
+# Lab 1总结
+本节学习了《xv6:a simple, Unix-like teaching operating system》第一章内容
+
 ## 1. Operating system interfaces
 
 操作系统的工作：1）为程序提供资源和服务；2）管理并抽象底层硬件；3）多路复用硬件（实现并行and并发）；4）提供程序间的交互方式
