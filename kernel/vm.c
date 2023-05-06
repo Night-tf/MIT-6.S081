@@ -432,3 +432,58 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+// Print a pagetable
+void _vmprint_helper(pagetable_t pagetable, int depth){
+  // there are 2^9 = 512 PTEs in a page table.
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+
+    if(pte & PTE_V){
+      if(depth == 0){
+        printf("..%d: pte %p pa %p\n", i, pte, PTE2PA(pte));
+      }
+      else if(depth == 1){
+        printf(".. ..%d: pte %p pa %p\n", i, pte, PTE2PA(pte));
+      }
+      else if(depth == 2){
+        printf(".. .. ..%d: pte %p pa %p\n", i, pte, PTE2PA(pte));
+      }
+    }
+    
+    // 指向下一级页表的页表项
+    if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
+      // this PTE points to a lower-level page table.
+      pagetable_t child_pagetable = (pagetable_t)PTE2PA(pte);
+      _vmprint_helper(child_pagetable, depth+1);
+    } 
+  }
+}
+
+// Print a page table
+// This function take a pagetable_t argument
+void vmprint(pagetable_t pagetable){
+  printf("page table %p\n", pagetable);
+  _vmprint_helper(pagetable, 0);
+}
+
+// 检测以虚拟地址va开始的页的access bit
+int vm_pgaccess(pagetable_t pagetable, uint va){
+  pte_t *pte;
+
+  if(va >= MAXVA)
+    return 0;
+
+  pte = walk(pagetable, va, 0);
+  if(pte == 0)
+    return 0;
+  if((*pte & PTE_V) == 0)
+    return 0;
+  if((*pte & PTE_A) == 0){
+    return 0;
+  }
+
+  *pte = *pte & (~PTE_A);  // clear PTE_A
+  return 1;
+    
+}

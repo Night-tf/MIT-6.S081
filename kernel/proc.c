@@ -127,6 +127,16 @@ found:
     return 0;
   }
 
+  // Allocate a read-only page to store a struct usyscall
+  // 这里是分配一块物理地址，然后返回这个物理地址的指针
+  // kalloc()的作用是分配一个物理页，4k
+  if((p->usyscall_addr = (struct usyscall *)kalloc()) == 0){
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+  p->usyscall_addr->pid = p->pid;
+
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
@@ -153,6 +163,12 @@ freeproc(struct proc *p)
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
+  // free the usyscall page
+  // 释放usyscall page的物理地址
+  if(p->usyscall_addr){
+    kfree((void*)p->usyscall_addr);
+  }
+  p->usyscall_addr = 0;
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
@@ -196,6 +212,20 @@ proc_pagetable(struct proc *p)
     return 0;
   }
 
+  // map one  read-only page to store a struct usyscall
+  if(mappages(pagetable, USYSCALL, PGSIZE,
+              (uint64)(p->usyscall_addr), PTE_R | PTE_U) < 0){
+    uvmunmap(pagetable, TRAMPOLINE, 1, 0);
+    uvmunmap(pagetable, TRAPFRAME, 1, 0);
+    uvmfree(pagetable, 0);
+    return 0;
+  }
+
+  // 在这个只读页的开头储存一个usyscall结构体，里面记录了进程的pid
+  // struct usyscall temp;
+  // temp.pid = myproc()->pid;
+  // memmove((void*)USYSCALL, (void*)&temp, sizeof(temp));
+
   return pagetable;
 }
 
@@ -204,6 +234,7 @@ proc_pagetable(struct proc *p)
 void
 proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
+  uvmunmap(pagetable, USYSCALL, 1, 0);
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
   uvmfree(pagetable, sz);
