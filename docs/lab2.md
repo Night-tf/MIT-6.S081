@@ -1,5 +1,10 @@
 # Lab 2总结
-本节学习了《xv6:a simple, Unix-like teaching operating system》第二章内容
+本节学习了《xv6:a simple, Unix-like teaching operating system》第二章内容，查看了`kernel/proc.c`和'kernel/kalloc.c`中的部分源码
+
+了解了以下知识点：
+- xv6系统中的进程都是放在一个`struct proc`数组中统一管理
+- xv6中的空闲物理内存都是放在`struct kmem`中的`freelist`中管理
+- 初步了解了内核态和用户态之间的数据传递，内核态时，可以通过`argint`等函数获取用户态下的数据，也可以通过`copyout`来实现将数据从内核态传递给用户态
 
 ## 2. Operating system organization
 
