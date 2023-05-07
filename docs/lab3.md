@@ -1,5 +1,5 @@
 # Lab 3 总结
-本节学习了《xv6:a simple, Unix-like teaching operating system》第三章内容，查看了`kernel/proc.c`，kernel/kalloc.c`，`kernel/vm.c`,`kernel/exec'中的部分源码
+本节学习了《xv6:a simple, Unix-like teaching operating system》第三章内容，查看了`kernel/proc.c`，`kernel/kalloc.c`，`kernel/vm.c`,`kernel/exec`中的部分源码
 
 1. 通过阅读源码了解了进程创建时的页表创建过程，物理地址的分配，物理地址和虚拟地址的映射创建过程（PTE创建过程），PTE的销毁过程以及物理地址的释放过程。
 2. 深刻了解了页表的翻译过程，PTE的含义，以及由虚拟地址映射到物理地址的过程。
