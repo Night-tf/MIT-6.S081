@@ -1,6 +1,11 @@
 # Lab 1总结
 本节学习了《xv6:a simple, Unix-like teaching operating system》第一章内容
 
+深刻了解了以下知识点：
+- I/O重定向中，`fork`，`exec`和文件描述符的使用
+- 管道通信中，`read`会一直等待，直到这个管道的写端口的文件描述符全部关闭
+- C语言字符串和字符数组，数组的地址以及数组首元素的地址
+
 ## 1. Operating system interfaces
 
 操作系统的工作：1）为程序提供资源和服务；2）管理并抽象底层硬件；3）多路复用硬件（实现并行and并发）；4）提供程序间的交互方式
