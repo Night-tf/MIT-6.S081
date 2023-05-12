@@ -78,6 +78,7 @@ int             pipewrite(struct pipe*, uint64, int);
 
 // printf.c
 void            printf(char*, ...);
+void            backtrace();
 void            panic(char*) __attribute__((noreturn));
 void            printfinit(void);
 
@@ -170,8 +171,6 @@ uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
-void            vmprint(pagetable_t);
-int             vm_pgaccess(pagetable_t , uint);
 
 // plic.c
 void            plicinit(void);

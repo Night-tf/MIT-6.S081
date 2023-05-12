@@ -1,8 +1,8 @@
 #include "types.h"
 #include "riscv.h"
-#include "param.h"
 #include "defs.h"
 #include "date.h"
+#include "param.h"
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
@@ -46,7 +46,6 @@ sys_sbrk(void)
 
   if(argint(0, &n) < 0)
     return -1;
-  
   addr = myproc()->sz;
   if(growproc(n) < 0)
     return -1;
@@ -58,8 +57,7 @@ sys_sleep(void)
 {
   int n;
   uint ticks0;
-
-
+  backtrace();
   if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
@@ -74,45 +72,6 @@ sys_sleep(void)
   release(&tickslock);
   return 0;
 }
-
-
-#ifdef LAB_PGTBL
-int
-sys_pgaccess(void)
-{
-  uint64 addr, bitmask;
-  int n;
-  if(argaddr(0, &addr) < 0){
-    return -1;
-  }
-  if(argint(1, &n) < 0){
-    return -1;
-  }
-  if(argaddr(2, &bitmask) < 0){
-    return -1;
-  }
-
-  if(n > 32 || n < 0){
-    return -1;
-  }
-
-  int temp_buf = 0;
-  struct proc *p = myproc();
-
-  for(int i = 0; i < n; ++i){
-    uint64 va = addr + i * PGSIZE;
-    int access_bit = vm_pgaccess(p->pagetable, va);
-    temp_buf = temp_buf | (access_bit << i);
-  }
-
-  if(copyout(p->pagetable, bitmask, (char*)&temp_buf, sizeof(temp_buf)) < 0){
-    return -1;
-  }
-
-
-  return 0;
-}
-#endif
 
 uint64
 sys_kill(void)
@@ -135,4 +94,30 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_sigalarm(void)
+{
+    int n;
+    if(argint(0, &n) < 0){
+        return -1;
+    }
+    uint64 callback;
+    if(argaddr(1, &callback) < 0) {
+        return -1;
+    }
+    struct proc* p = myproc();
+    p->period=n;
+    p->callback=callback;
+    return 0;
+}
+
+uint64
+sys_sigreturn(void)
+{
+    struct proc* p = myproc();
+    *p->trapframe=*p->alarmframe;
+    p->alarm=0;
+    return 0;
 }
