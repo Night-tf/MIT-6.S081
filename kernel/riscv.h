@@ -308,13 +308,6 @@ r_tp()
   asm volatile("mv %0, tp" : "=r" (x) );
   return x;
 }
-static inline uint64
-r_fp()
-{
-    uint64 x;
-    asm volatile("mv %0, s0" : "=r" (x) );
-    return x;
-}
 static inline void 
 w_tp(uint64 x)
 {
@@ -326,6 +319,15 @@ r_ra()
 {
   uint64 x;
   asm volatile("mv %0, ra" : "=r" (x) );
+  return x;
+}
+// return the frame pointer of the currently
+// executing function in the register s0
+static inline uint64
+r_fp()
+{
+  uint64 x;
+  asm volatile("mv %0, s0" : "=r" (x) );
   return x;
 }
 
@@ -370,3 +372,4 @@ sfence_vma()
 
 typedef uint64 pte_t;
 typedef uint64 *pagetable_t; // 512 PTEs
+

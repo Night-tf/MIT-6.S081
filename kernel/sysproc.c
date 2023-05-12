@@ -96,28 +96,26 @@ sys_uptime(void)
   return xticks;
 }
 
-uint64
-sys_sigalarm(void)
-{
-    int n;
-    if(argint(0, &n) < 0){
-        return -1;
-    }
-    uint64 callback;
-    if(argaddr(1, &callback) < 0) {
-        return -1;
-    }
-    struct proc* p = myproc();
-    p->period=n;
-    p->callback=callback;
-    return 0;
+uint64 sys_sigalarm(void){
+  int interval;
+  uint64 handler;
+
+  if(argint(0, &interval) < 0){
+    return -1;
+  }
+  if(argaddr(1, &handler) < 0){
+    return -1;
+  }
+  struct proc *p = myproc();
+  p->interval = interval;
+  p->handler = handler;
+  p->alarm_execting = 0;
+  return 0;
 }
 
-uint64
-sys_sigreturn(void)
-{
-    struct proc* p = myproc();
-    *p->trapframe=*p->alarmframe;
-    p->alarm=0;
-    return 0;
+uint64 sys_sigreturn(void){
+  struct proc *p = myproc();
+  *p->trapframe = *p->trapframe_before_alarm;
+  p->alarm_execting = 0;
+  return 0;
 }

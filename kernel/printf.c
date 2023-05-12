@@ -115,18 +115,6 @@ printf(char *fmt, ...)
 }
 
 void
-backtrace()
-{
-    printf("backtrace:\n");
-    uint64 p = r_fp();
-    uint64 page = PGROUNDDOWN(p);
-    while(PGROUNDDOWN(p) == page){
-        printf("%p %p\n", *(uint64*)(p-8), p);
-        p = *(uint64*)(p-16);
-    }
-}
-
-void
 panic(char *s)
 {
   pr.locking = 0;
@@ -144,4 +132,17 @@ printfinit(void)
 {
   initlock(&pr.lock, "pr");
   pr.locking = 1;
+}
+
+// use these frame pointers to walk up the stack and print
+// the saved return address in each stack frame
+void backtrace(void){
+  printf("backtrace:\n");
+  uint64 fp = r_fp();
+  uint64 top = PGROUNDUP(fp);
+  uint64 bottom = PGROUNDDOWN(fp);
+  while(fp < top && fp > bottom){
+    printf("%p\n", *(uint64*)(fp-8));
+    fp = *(uint64*)(fp-16);
+  }
 }
